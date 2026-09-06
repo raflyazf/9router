@@ -51,9 +51,9 @@ describe("responses→openai parallel tool calls", () => {
     const chunks = [];
     // Upstream batches all added events before deltas/dones (parallel calls).
     const events = [
-      { type: "response.output_item.added", output_index: 0, item: { type: "function_call", call_id: "call_aaa", name: "Read", arguments: "" } },
-      { type: "response.output_item.added", output_index: 1, item: { type: "function_call", call_id: "call_bbb", name: "Read", arguments: "" } },
-      { type: "response.output_item.added", output_index: 2, item: { type: "function_call", call_id: "call_ccc", name: "Read", arguments: "" } },
+      { type: "response.output_item.added", output_index: 0, item: { id: "fc_call_aaa", type: "function_call", call_id: "call_aaa", name: "Read", arguments: "" } },
+      { type: "response.output_item.added", output_index: 1, item: { id: "fc_call_bbb", type: "function_call", call_id: "call_bbb", name: "Read", arguments: "" } },
+      { type: "response.output_item.added", output_index: 2, item: { id: "fc_call_ccc", type: "function_call", call_id: "call_ccc", name: "Read", arguments: "" } },
       { type: "response.function_call_arguments.delta", item_id: "fc_call_aaa", output_index: 0, delta: '{"file_path":"/tmp/a.txt"}' },
       { type: "response.function_call_arguments.delta", item_id: "fc_call_bbb", output_index: 1, delta: '{"file_path":"/tmp/b.txt"}' },
       { type: "response.function_call_arguments.delta", item_id: "fc_call_ccc", output_index: 2, delta: '{"file_path":"/tmp/c.txt"}' },
@@ -80,10 +80,10 @@ describe("responses→openai parallel tool calls", () => {
     const state = newState();
     const chunks = [];
     const events = [
-      { type: "response.output_item.added", output_index: 0, item: { type: "function_call", call_id: "call_111", name: "Read", arguments: "" } },
+      { type: "response.output_item.added", output_index: 0, item: { id: "fc_call_111", type: "function_call", call_id: "call_111", name: "Read", arguments: "" } },
       { type: "response.function_call_arguments.delta", item_id: "fc_call_111", output_index: 0, delta: '{"file_path":"/tmp/x.txt"}' },
       { type: "response.output_item.done", output_index: 0, item: { type: "function_call", call_id: "call_111", name: "Read", arguments: '{"file_path":"/tmp/x.txt"}' } },
-      { type: "response.output_item.added", output_index: 1, item: { type: "function_call", call_id: "call_222", name: "Read", arguments: "" } },
+      { type: "response.output_item.added", output_index: 1, item: { id: "fc_call_222", type: "function_call", call_id: "call_222", name: "Read", arguments: "" } },
       { type: "response.function_call_arguments.delta", item_id: "fc_call_222", output_index: 1, delta: '{"file_path":"/tmp/y.txt"}' },
       { type: "response.output_item.done", output_index: 1, item: { type: "function_call", call_id: "call_222", name: "Read", arguments: '{"file_path":"/tmp/y.txt"}' } },
     ];
