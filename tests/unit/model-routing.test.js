@@ -10,12 +10,14 @@ async function setupDb() {
   process.env.DATA_DIR = tempDir;
   vi.resetModules();
 
-  const { createProviderNode } = await import("@/models/index.js");
-  const { getModelInfo } = await import("@/sse/services/model.js");
+  const { createProviderNode, createCombo } = await import("@/models/index.js");
+  const { getModelInfo, getComboModels } = await import("@/sse/services/model.js");
 
   return {
     createProviderNode,
+    createCombo,
     getModelInfo,
+    getComboModels,
     cleanup() {
       fs.rmSync(tempDir, { recursive: true, force: true });
     },
@@ -76,5 +78,20 @@ describe("model routing", () => {
         provider: "openai-compatible-chat-test",
         model: "gpt-image-1",
       });
+  });
+
+  it("resolves an explicit combo whose name contains a provider prefix", async () => {
+    const ctx = await setupDb();
+    cleanup = ctx.cleanup;
+
+    await ctx.createCombo({
+      name: "ali/qwen3.8-flash",
+      models: ["ali-sg/qwen3.8-flash", "ali-id/qwen3.8-flash"],
+    });
+
+    await expect(ctx.getComboModels("ali/qwen3.8-flash")).resolves.toEqual([
+      "ali-sg/qwen3.8-flash",
+      "ali-id/qwen3.8-flash",
+    ]);
   });
 });
