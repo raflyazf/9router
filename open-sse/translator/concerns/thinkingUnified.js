@@ -162,6 +162,24 @@ function normalizeOpenAILevel(level, supportedLevels) {
   return best ? best.level : level;
 }
 
+// Passthrough guard: native clients (Claude Code) can send thinking fields the
+// model's backend rejects — e.g. output_config.effort "xhigh" for a GLM-5.3 id,
+// whose backend accepts exactly low|high|max (verified live 2026-09-21: the raw
+// field is forwarded on the passthrough path, skipping applyFormat, and Alibaba
+// returns 400 "reasoning_effort must be one of low, high, max"). Clamp the level
+// to the model's supported set (thinkingLevels.js). Scoped to zai-format models:
+// their level enum is narrower than the generic effort scale.
+export function clampNativeThinking(body, provider, model) {
+  const eff = body?.output_config?.effort;
+  if (typeof eff !== "string" || !eff) return body;
+  const caps = getCapabilitiesForModel(provider, model);
+  if (caps.thinkingFormat !== "zai") return body;
+  const levels = getThinkingLevels(provider, model);
+  const mapped = normalizeOpenAILevel(eff.toLowerCase(), levels);
+  if (mapped && mapped !== eff) body.output_config.effort = mapped;
+  return body;
+}
+
 function toGeminiThinkingLevel(cfg) {
   const raw = cfg.mode === "auto" ? "high" : (toLevel(cfg) || "high");
   return effortToThinkingLevel(raw);
