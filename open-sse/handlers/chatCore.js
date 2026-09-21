@@ -141,6 +141,15 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
     stream = false;
   }
 
+  // Propagate the resolved stream decision into the request body so translators
+  // and executors forward it upstream. When the client omits `stream` (undefined),
+  // the decision above defaults to streaming — but the translator copies body.stream,
+  // leaving upstream to default to non-streaming. The gateway then returns an
+  // SSE-framed response whose payload is one raw JSON object + a trailing
+  // "data: [DONE]" (invalid as both JSON and SSE). Forcing body.stream to match
+  // the decision keeps the upstream response shape in sync with the client promise.
+  body.stream = stream;
+
   const reqLogger = await createRequestLogger(sourceFormat, targetFormat, model);
   if (clientRawRequest) reqLogger.logClientRawRequest(clientRawRequest.endpoint, clientRawRequest.body, clientRawRequest.headers);
   reqLogger.logRawRequest(body);
