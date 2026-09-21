@@ -50,10 +50,13 @@ export const MODEL_PRICING = {
   "gpt-5.3-codex":                { input: 1.75,  output: 14.00, cached: 0.175, reasoning: 14.00,  cache_creation: 1.75  },
   "gpt-5.3-codex-spark":         { input: 3.00,  output: 12.00, cached: 0.30,  reasoning: 12.00,  cache_creation: 3.00  },
   "gpt-5.6":                      { input: 2.50,  output: 15.00, cached: 0.25,  reasoning: 15.00,  cache_creation: 2.50  },
-  "gpt-5.6-luna":                 { input: 1.00,  output: 6.00,  cached: 0.10,  reasoning: 6.00,   cache_creation: 1.00  },
-  "gpt-5.6-terra":                { input: 2.50,  output: 15.00, cached: 0.25,  reasoning: 15.00,  cache_creation: 2.50  },
-  "gpt-5.6-sol":                  { input: 5.00,  output: 30.00, cached: 0.50,  reasoning: 30.00,  cache_creation: 5.00  },
-  "gpt-6-astra":                  { input: 5.00,  output: 30.00, cached: 0.50,  reasoning: 30.00,  cache_creation: 5.00  },
+  // GPT-5.6/6 flagship: official OpenAI Standard pricing (short-context tier).
+  // https://developers.openai.com/api/docs/pricing
+  // Note: long-context tiers (>272K) run ~2x input; the flat engine can't model tiers.
+  "gpt-5.6-luna":                 { input: 0.20,  output: 1.20,  cached: 0.02,  reasoning: 1.20,   cache_creation: 0.25  },
+  "gpt-5.6-terra":                { input: 2.00,  output: 12.00, cached: 0.20,  reasoning: 12.00,  cache_creation: 2.50  },
+  "gpt-5.6-sol":                  { input: 4.00,  output: 20.00, cached: 0.40,  reasoning: 20.00,  cache_creation: 5.00  },
+  "gpt-6-astra":                  { input: 10.00, output: 50.00, cached: 1.00,  reasoning: 50.00,  cache_creation: 12.50 },
   "o1":                           { input: 15.00, output: 60.00, cached: 7.50,  reasoning: 90.00,  cache_creation: 15.00 },
   "o1-mini":                      { input: 3.00,  output: 12.00, cached: 1.50,  reasoning: 18.00,  cache_creation: 3.00  },
 
@@ -86,6 +89,14 @@ export const MODEL_PRICING = {
   "gemini-2.5-flash-lite":        { input: 0.15,  output: 1.25,  cached: 0.015, reasoning: 1.875,  cache_creation: 0.15  },
 
   // === Qwen ===
+  // qwen3.8 family: Alibaba Model Studio Singapore (International) list prices.
+  // https://www.alibabacloud.com/help/en/model-studio/model-pricing
+  // Cache rates follow Alibaba's context-cache rule (hit 10%, creation 125% of input)
+  // except qwen3.8-omni-flash, whose official cache-hit price is $0.016.
+  "qwen3.8-max":                  { input: 2.00,  output: 6.00,  cached: 0.20,  reasoning: 6.00,   cache_creation: 2.50  },
+  "qwen3.8-max-0902":             { input: 2.00,  output: 6.00,  cached: 0.20,  reasoning: 6.00,   cache_creation: 2.50  },
+  "qwen3.8-flash":                { input: 0.15,  output: 0.47,  cached: 0.015, reasoning: 0.47,   cache_creation: 0.1875 },
+  "qwen3.8-omni-flash":           { input: 0.15,  output: 0.47,  cached: 0.016, reasoning: 0.47,   cache_creation: 0.1875 },
   "qwen3-coder-plus":             { input: 1.00,  output: 4.00,  cached: 0.50,  reasoning: 6.00,   cache_creation: 1.00  },
   "qwen3-coder-flash":            { input: 0.50,  output: 2.00,  cached: 0.25,  reasoning: 3.00,   cache_creation: 0.50  },
 
@@ -111,11 +122,19 @@ export const MODEL_PRICING = {
   "deepseek-v3.2-chat":           { input: 0.14,  output: 0.28,  cached: 0.0028, reasoning: 0.28,   cache_creation: 0.14  },
   "deepseek-v3.2-reasoner":       { input: 0.14,  output: 0.28,  cached: 0.0028, reasoning: 0.28,   cache_creation: 0.14  },
   "deepseek-v4-flash":            { input: 0.14,  output: 0.28,  cached: 0.0028, reasoning: 0.28,   cache_creation: 0.14  },
-  "deepseek-v4.1-flash":          { input: 0.14,  output: 0.28,  cached: 0.0028, reasoning: 0.28,   cache_creation: 0.14  },
+  "deepseek-v4.1-flash":          { input: 0.57,  output: 1.71,  cached: 0.057, reasoning: 1.71,   cache_creation: 0.57  },
   "deepseek-flash":               { input: 0.14,  output: 0.28,  cached: 0.0028, reasoning: 0.28,   cache_creation: 0.14  },
   "deepseek-v4-pro":              { input: 0.435, output: 0.87,  cached: 0.003625, reasoning: 0.87,  cache_creation: 0.435 },
 
   // === GLM ===
+  // Alibaba Model Studio SG (International) flat prices. Both casings needed:
+  // usage records "ZHIPU/GLM-5.3" which resolves to baseModel "GLM-5.3"
+  // (exact lookup is case-sensitive; patterns are not).
+  // glm-5.3-prime is priced as glm-5.2-fast-preview (per operator confirmation).
+  "GLM-5.3":                      { input: 1.40,  output: 4.40,  cached: 0.50,  reasoning: 4.40,   cache_creation: 1.40  },
+  "glm-5.3":                      { input: 1.40,  output: 4.40,  cached: 0.50,  reasoning: 4.40,   cache_creation: 1.40  },
+  "glm-5.2-fast-preview":         { input: 2.80,  output: 8.80,  cached: 1.00,  reasoning: 8.80,   cache_creation: 2.80  },
+  "glm-5.3-prime":                { input: 2.80,  output: 8.80,  cached: 1.00,  reasoning: 8.80,   cache_creation: 2.80  },
   "glm-4.6":                      { input: 0.50,  output: 2.00,  cached: 0.25,  reasoning: 3.00,   cache_creation: 0.50  },
   "glm-4.6v":                     { input: 0.75,  output: 3.00,  cached: 0.375, reasoning: 4.50,   cache_creation: 0.75  },
   "glm-4.7":                      { input: 0.75,  output: 3.00,  cached: 0.375, reasoning: 4.50,   cache_creation: 0.75  },
@@ -361,15 +380,19 @@ export function matchPattern(pattern, model) {
 }
 
 /**
- * Resolve pricing for a model using the 3-step fallback chain:
+ * Resolve pricing for a model using the fallback chain:
  *   1. PROVIDER_PRICING[provider][model]
- *   2. MODEL_PRICING[model]
- *   3. PATTERN_PRICING (glob match)
+ *   2. MODEL_PRICING[model] (also with vendor prefix stripped)
+ *   3. MODEL_PRICING / PATTERN_PRICING on the effort-suffix-stripped model
+ *      (annotated ids like "gpt-5.6-sol(xhigh)" or "gpt-5.5-xhigh" must price
+ *      at the base model's rate when the variant has no own entry)
  *
  * @param {string} provider
  * @param {string} model
  * @returns {object|null}
  */
+const EFFORT_SUFFIX_RE = /[-_\s]?\((?:high|xhigh|max|medium|low|effort)\)$|[-_](?:xhigh|high|max|medium|low)$/i;
+
 export function getPricingForModel(provider, model) {
   if (!model) return null;
 
@@ -383,9 +406,16 @@ export function getPricingForModel(provider, model) {
   if (MODEL_PRICING[baseModel]) return MODEL_PRICING[baseModel];
   if (MODEL_PRICING[model]) return MODEL_PRICING[model];
 
-  // 3. Pattern match
+  // 3. Effort-annotated id without own entry → price at the base model's rate
+  const stripped = baseModel.replace(EFFORT_SUFFIX_RE, "");
+  if (stripped !== baseModel) {
+    if (MODEL_PRICING[stripped]) return MODEL_PRICING[stripped];
+  }
+
+  // 4. Pattern match (on the stripped id so annotations can't widen the glob)
+  const patternTarget = stripped !== baseModel ? stripped : baseModel;
   for (const { pattern, pricing } of PATTERN_PRICING) {
-    if (matchPattern(pattern, baseModel) || matchPattern(pattern, model)) {
+    if (matchPattern(pattern, patternTarget) || matchPattern(pattern, model)) {
       return pricing;
     }
   }
