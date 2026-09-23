@@ -152,6 +152,22 @@ describe("API key model access rules", () => {
       expect(mocks.handleChatCore).not.toHaveBeenCalled();
     });
 
+    it("blocks a plain alias after resolving its provider-node prefix", async () => {
+      mocks.getModelInfo.mockResolvedValue({
+        provider: "openai-compatible-chat-node1",
+        model: "zai-org/GLM-5.3-Flash",
+      });
+      mocks.getProviderNodes.mockResolvedValue([
+        { id: "openai-compatible-chat-node1", type: "openai-compatible", prefix: "mgf" },
+      ]);
+
+      const response = await handleChat(chatRequest("glm-flash"));
+
+      expect(response.status).toBe(403);
+      expect(mocks.handleChatCore).not.toHaveBeenCalled();
+      expect(mocks.getProviderCredentials).not.toHaveBeenCalled();
+    });
+
     it("continues for a model that does not match a deny rule", async () => {
       const response = await handleChat(chatRequest("openai/gpt-4.1"));
       expect(response.status).toBe(200);

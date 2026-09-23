@@ -1051,7 +1051,7 @@ export default function APIPageClient({ machineId }) {
                     <p className="text-xs text-text-muted">
                       Created {new Date(key.createdAt).toLocaleDateString()}
                     </p>
-                    {key.modelAccess?.mode !== "all" && (
+                    {key.modelAccess && key.modelAccess.mode !== "all" && (
                       <Tooltip text={key.modelAccess?.patterns?.length ? key.modelAccess.patterns.join(", ") : "No model patterns set"}>
                         <Badge variant={key.modelAccess?.mode === "allow" ? "primary" : "warning"} size="sm">
                           {key.modelAccess?.mode === "allow" ? "Allow" : "Blocked"}: {key.modelAccess?.patterns?.length || 0} rules
