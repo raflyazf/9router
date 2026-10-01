@@ -41,9 +41,9 @@ describe("Codex fast tier and capacity handling", () => {
     expect(body.service_tier).toBe("priority");
   });
 
-  it("does not add Fast tier to non-Sol models", () => {
+  it("adds priority tier to non-Sol codex models when Fast mode is on", () => {
     const body = applyCodexFastMode({ input: "hi" }, "codex", "gpt-5.6-terra", { codexFastMode: true });
-    expect(body.service_tier).toBeUndefined();
+    expect(body.service_tier).toBe("priority");
   });
 
   it("preserves a client-supplied service tier", () => {
