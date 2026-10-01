@@ -285,7 +285,7 @@ export async function saveRequestUsage(entry) {
           entry.timestamp, entry.provider || null, entry.model || null,
           entry.connectionId || null, entry.apiKey || null, entry.endpoint || null,
           promptTokens, completionTokens, entry.cost || 0, entry.status || "ok",
-          stringifyJson(tokens), stringifyJson({}),
+          stringifyJson(tokens), stringifyJson(entry.meta || {}),
         ]
       );
 
@@ -312,6 +312,48 @@ export async function saveRequestUsage(entry) {
   } catch (e) {
     console.error("Failed to save usage stats:", e);
   }
+}
+
+// Decode speed per connection from recent usageHistory rows.
+// meta.latency is written by saveUsageStats for chat requests (streaming rows
+// carry ttft; non-streaming rows carry total only → treated as e2e duration).
+// TPS = completion_tokens / window; ≥300ms window to skip degenerate responses.
+export async function getConnectionSpeedStats(connectionId, limit = 20) {
+  if (!connectionId) return null;
+  const db = await getAdapter();
+  const rows = db.all(
+    `SELECT completionTokens,
+            json_extract(meta, '$.latency.total') AS total,
+            json_extract(meta, '$.latency.ttft') AS ttft
+     FROM usageHistory
+     WHERE connectionId = ? AND status = 'ok' AND meta LIKE '%latency%'
+     ORDER BY timestamp DESC LIMIT ?`,
+    [connectionId, limit]
+  );
+
+  const samples = [];
+  for (const r of rows) {
+    const ct = Number(r.completionTokens) || 0;
+    const total = Number(r.total);
+    const ttft = Number(r.ttft);
+    const windowMs = ttft > 0 && total > ttft ? total - ttft : total;
+    if (ct > 0 && Number.isFinite(windowMs) && windowMs >= 300) {
+      samples.push({ tps: (ct * 1000) / windowMs, ttftMs: ttft > 0 ? ttft : total });
+    }
+  }
+  if (!samples.length) return null;
+
+  const avgTps = samples.reduce((s, x) => s + x.tps, 0) / samples.length;
+  const sorted = [...samples].sort((a, b) => a.tps - b.tps);
+  const medianTps = sorted[Math.floor(sorted.length / 2)].tps;
+  const avgTtftMs = samples.reduce((s, x) => s + x.ttftMs, 0) / samples.length;
+  return {
+    lastTps: samples[0].tps,
+    avgTps,
+    medianTps,
+    avgTtftMs,
+    samples: samples.length,
+  };
 }
 
 export async function getUsageHistory(filter = {}) {

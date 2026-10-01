@@ -1412,6 +1412,11 @@ export default function ProviderLimits() {
                     {quota.raw.credits.overageLimitReached ? " · overage limit reached" : ""}
                   </p>
                 )}
+                {quota?.raw?.speed && (
+                  <p className="mt-1 px-1 text-[10px] leading-relaxed text-text-muted tabular-nums">
+                    Speed: {Math.round(quota.raw.speed.avgTps).toLocaleString()} tok/s avg · last {Math.round(quota.raw.speed.lastTps).toLocaleString()} · TTFT {(quota.raw.speed.avgTtftMs / 1000).toFixed(1)}s avg (n={quota.raw.speed.samples})
+                  </p>
+                )}
                 {hiddenQuotaRows.length > 0 && (
                   <div className="mt-2 flex min-w-0 items-center gap-1 border-t border-black/5 pt-2 text-[10px] text-text-muted dark:border-white/5">
                     <span className="material-symbols-outlined shrink-0 text-[14px]">
