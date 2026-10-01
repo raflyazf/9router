@@ -322,7 +322,7 @@ export async function getConnectionSpeedStats(connectionId, limit = 20) {
   if (!connectionId) return null;
   const db = await getAdapter();
   const rows = db.all(
-    `SELECT completionTokens,
+    `SELECT model, completionTokens,
             json_extract(meta, '$.latency.total') AS total,
             json_extract(meta, '$.latency.ttft') AS ttft
      FROM usageHistory
@@ -332,27 +332,35 @@ export async function getConnectionSpeedStats(connectionId, limit = 20) {
   );
 
   const samples = [];
+  const byModelSamples = {};
   for (const r of rows) {
     const ct = Number(r.completionTokens) || 0;
     const total = Number(r.total);
     const ttft = Number(r.ttft);
     const windowMs = ttft > 0 && total > ttft ? total - ttft : total;
     if (ct > 0 && Number.isFinite(windowMs) && windowMs >= 300) {
-      samples.push({ tps: (ct * 1000) / windowMs, ttftMs: ttft > 0 ? ttft : total });
+      const sample = { tps: (ct * 1000) / windowMs, ttftMs: ttft > 0 ? ttft : total };
+      samples.push(sample);
+      const key = r.model || "unknown";
+      (byModelSamples[key] ||= []).push(sample);
     }
   }
   if (!samples.length) return null;
 
-  const avgTps = samples.reduce((s, x) => s + x.tps, 0) / samples.length;
+  const summarize = (list) => {
+    const avgTps = list.reduce((s, x) => s + x.tps, 0) / list.length;
+    const avgTtftMs = list.reduce((s, x) => s + x.ttftMs, 0) / list.length;
+    return { avgTps, lastTps: list[0].tps, avgTtftMs, samples: list.length };
+  };
+
   const sorted = [...samples].sort((a, b) => a.tps - b.tps);
   const medianTps = sorted[Math.floor(sorted.length / 2)].tps;
-  const avgTtftMs = samples.reduce((s, x) => s + x.ttftMs, 0) / samples.length;
   return {
-    lastTps: samples[0].tps,
-    avgTps,
+    ...summarize(samples),
     medianTps,
-    avgTtftMs,
-    samples: samples.length,
+    byModel: Object.entries(byModelSamples)
+      .map(([model, list]) => ({ model, ...summarize(list) }))
+      .sort((a, b) => b.samples - a.samples),
   };
 }
 
