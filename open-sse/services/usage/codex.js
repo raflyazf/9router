@@ -75,19 +75,33 @@ export function normalizeCodexUsage(data) {
   const normalRateLimit = data.rate_limit || data.rate_limits || data.rate_limits_by_limit_id?.codex || {};
   const reviewRateLimit = getCodexReviewRateLimit(data);
   const sparkRateLimit = getCodexSparkRateLimit(data);
+  const reserveRateLimit = getCodexReserveRateLimit(data);
   const availableResetCredits = Math.max(0, toFiniteNumber(data.rate_limit_reset_credits?.available_count, 0));
   const quotas = {};
 
   appendCodexQuotaWindows(quotas, "", normalRateLimit);
   appendCodexQuotaWindows(quotas, "review", reviewRateLimit);
   appendCodexQuotaWindows(quotas, "spark", sparkRateLimit);
+  appendCodexQuotaWindows(quotas, "reserve", reserveRateLimit);
+
+  const rawCredits = data.credits && typeof data.credits === "object" ? data.credits : {};
+  const credits = {
+    hasCredits: rawCredits.has_credits === true,
+    balance: toFiniteNumber(rawCredits.balance, 0),
+    unlimited: rawCredits.unlimited === true,
+    overageLimitReached: rawCredits.overage_limit_reached === true,
+    approxLocalMessages: Array.isArray(rawCredits.approx_local_messages) ? rawCredits.approx_local_messages : null,
+    approxCloudMessages: Array.isArray(rawCredits.approx_cloud_messages) ? rawCredits.approx_cloud_messages : null,
+  };
 
   return {
     plan: data.plan_type || data.summary?.plan || "unknown",
     limitReached: getCodexRateLimitBody(normalRateLimit)?.limit_reached || false,
     reviewLimitReached: getCodexRateLimitBody(reviewRateLimit)?.limit_reached || false,
     sparkLimitReached: getCodexRateLimitBody(sparkRateLimit)?.limit_reached || false,
+    reserveLimitReached: getCodexRateLimitBody(reserveRateLimit)?.limit_reached || false,
     resetCredits: { availableCount: availableResetCredits },
+    credits,
     quotas,
   };
 }
@@ -106,6 +120,22 @@ function getCodexReviewRateLimit(data) {
   return additional.find((entry) => {
     const id = String(entry?.limit_name || entry?.metered_feature || entry?.id || "").toLowerCase();
     return id === "code_review" || id === "codex_review" || id === "review" || id.includes("review");
+  }) || null;
+}
+
+// Luna reserve pool — `additional_rate_limits` entry gated by limit_name
+// (e.g. "gpt-reserve", serves `normal_model_slug` like gpt-5.6-luna).
+function getCodexReserveRateLimit(data) {
+  const byLimitId = data.rate_limits_by_limit_id;
+  if (byLimitId && typeof byLimitId === "object" && !Array.isArray(byLimitId)) {
+    const direct = byLimitId["gpt-reserve"] || byLimitId.gpt_reserve || byLimitId.reserve;
+    if (direct) return direct;
+  }
+
+  const additional = Array.isArray(data.additional_rate_limits) ? data.additional_rate_limits : [];
+  return additional.find((entry) => {
+    const id = String(entry?.limit_name || entry?.metered_feature || entry?.id || "").toLowerCase();
+    return id.includes("reserve");
   }) || null;
 }
 
