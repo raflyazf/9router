@@ -488,6 +488,27 @@ export default function ProviderDetailPage() {
     saveAutoPing({ ...autoPing, connections: { ...autoPing.connections, [connectionId]: on } });
   };
 
+  const handleFastModeConnection = async (connectionId, on) => {
+    try {
+      const res = await fetch(`/api/providers/${connectionId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ providerSpecificData: { codexFastMode: on } }),
+      });
+      if (res.ok) {
+        setConnections((prev) =>
+          prev.map((c) =>
+            c.id === connectionId
+              ? { ...c, providerSpecificData: { ...(c.providerSpecificData || {}), codexFastMode: on } }
+              : c,
+          ),
+        );
+      }
+    } catch (error) {
+      console.log("Error toggling fast mode:", error);
+    }
+  };
+
   useEffect(() => {
     fetchConnections();
     fetchAliases();
@@ -1071,6 +1092,10 @@ export default function ProviderDetailPage() {
                   onToggle: (on) => handleAutoPingConnection(conn.id, on),
                   provider: providerId,
                 } : null}
+                fastMode={providerId === "codex" ? {
+                  on: conn.providerSpecificData?.codexFastMode === true,
+                  onToggle: (on) => handleFastModeConnection(conn.id, on),
+                } : null}
                 onUpdateProxy={async (proxyPoolId) => {
                   try {
                     const res = await fetch(`/api/providers/${conn.id}`, {
@@ -1612,7 +1637,7 @@ export default function ProviderDetailPage() {
                   onChange={handleCodexFastModeChange}
                   disabled={savingCodexFastMode}
                   label="Fast inference"
-                  description="Use the priority tier for GPT-5.6-Sol."
+                  description="Use the priority tier for Sol models (all accounts). Per-account override lives on each connection row and quota card."
                 />
               )}
               {providerId === "codex" && codexFastModeError && (

@@ -28,11 +28,13 @@ import { updateProviderCredentials, checkAndRefreshToken } from "../services/tok
 import { getProjectIdForConnection } from "open-sse/services/projectId.js";
 import { stripModelContextMarker } from "open-sse/utils/modelMarkers.js";
 
-export function applyCodexFastMode(body, provider, model, settings) {
+const CODEX_FAST_MODE_MODEL = /^gpt-[\d.]+-sol/;
+
+export function applyCodexFastMode(body, provider, model, settings, credentials = null) {
   if (
     provider !== "codex" ||
-    !["gpt-5.6-sol", "gpt-5.6-sol-review"].includes(model) ||
-    settings?.codexFastMode !== true ||
+    !CODEX_FAST_MODE_MODEL.test(model) ||
+    (settings?.codexFastMode !== true && credentials?.providerSpecificData?.codexFastMode !== true) ||
     body.service_tier
   ) return body;
 
@@ -288,7 +290,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
     // Use shared chatCore
     const chatSettings = await getSettings();
     const providerThinking = (chatSettings.providerThinking || {})[provider] || null;
-    const effectiveBody = applyCodexFastMode(body, provider, model, chatSettings);
+    const effectiveBody = applyCodexFastMode(body, provider, model, chatSettings, refreshedCredentials);
     const result = await handleChatCore({
       body: { ...effectiveBody, model: `${provider}/${model}` },
       modelInfo: { provider, model },
