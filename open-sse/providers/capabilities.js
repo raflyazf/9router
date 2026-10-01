@@ -173,6 +173,16 @@ export const PROVIDER_CAPABILITIES = {
   "opencode-go": {
     "glm-5.3-flash": { vision: true, videoInput: true, pdf: true, reasoning: true, thinkingFormat: "openai", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 131072 },
   },
+  // Vercel AI Gateway — native `reasoning.effort`; limits from /v1/models metadata.
+  "vercel-ai-gateway": {
+    "stealth/pixel-canary": { vision: true, reasoning: true, thinkingFormat: "openai", thinkingEffortSupported: true, contextWindow: 262144, maxOutput: 131072 },
+  },
+  // Experiential Labs (xpl) — OpenAI-compatible chat; the z.ai `thinking`
+  // object is not accepted, use reasoning_effort instead.
+  "openai-compatible-chat-1935309f-1b7d-460b-91f0-73b0765ce508": {
+    "glm-5.3-flash": { vision: true, videoInput: true, pdf: true, reasoning: true, thinkingFormat: "openai", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 131072 },
+    "qwen3.8-27b":   { reasoning: true, thinkingFormat: "openai", contextWindow: 1000000, maxOutput: 65536 },
+  },
   "codex": {
     "gpt-6-astra":               { vision: true, reasoning: true, search: true, thinkingFormat: "openai", contextWindow: 920000, maxOutput: 128000 },
     "gpt-5.6-sol":               CODEX_GPT_56_SOL_CAPS,
@@ -341,7 +351,7 @@ export const PATTERN_CAPABILITIES = [
   { pattern: "*qwq*",           caps: { reasoning: true, thinkingFormat: "qwen", thinkingCanDisable: false, contextWindow: 131072 } },
   { pattern: "*qwen*",          caps: { reasoning: true, thinkingFormat: "qwen", contextWindow: 262144 } },
 
-  // ── LongCat ─────────────────────────────────────────────────────
+  // ── LongCat (oc free; ~653k verified 2026-09-28, ~697k+ 500s) ──
   { pattern: "*longcat-2.5*",   caps: { reasoning: true, contextWindow: 650000 } },
 
   // ── Kimi (enabled→reasoning_effort; K2.7-code cannot disable) ─────
